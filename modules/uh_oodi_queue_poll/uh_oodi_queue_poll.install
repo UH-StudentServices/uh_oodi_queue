@@ -10,6 +10,14 @@
  */
 
 /**
+ * Implements hook_install().
+ */
+function uh_oodi_queue_poll_install() {
+  // Set last requested timestamp to now
+  variable_set('uh_oodi_queue_poll_last_requested', new DateTime('@' . REQUEST_TIME, new DateTimeZone('Etc/Zulu')));
+}
+
+/**
  * Implements hook_uninstall().
  */
 function uh_oodi_queue_poll_uninstall() {
