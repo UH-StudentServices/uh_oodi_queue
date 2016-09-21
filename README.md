@@ -21,6 +21,13 @@ if ($item !== FALSE) {
 
 ```
 
+```bash
+
+# Adds an item to high priority
+[you@machine]$ drush uoq-add update courseunitrealisation 12345 --priority=hi
+ 
+```
+
 ## Questions
 Please post your question to doo-projekti@helsinki.fi
 
