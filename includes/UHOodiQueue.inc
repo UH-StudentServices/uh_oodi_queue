@@ -19,7 +19,10 @@ class UHOodiQueue extends SystemQueue implements DrupalReliableQueueInterface {
   protected $allowed_actions = array('delete', 'update');
   protected $allowed_entity_types = array('learningopportunity', 'courseunitrealisation');
 
-  public function __construct($priority = self::PRIORITY_MEDIUM) {
+  public function __construct($priority = NULL) {
+    if (is_null($priority)) {
+      $priority = variable_get('uh_oodi_queue_default_queue', self::PRIORITY_MEDIUM);
+    }
     // Validate priority
     if ($priority !== self::PRIORITY_HIGH &&
       $priority !== self::PRIORITY_MEDIUM &&

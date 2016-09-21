@@ -44,11 +44,11 @@ function uh_oodi_queue_settings() {
       '#title' => t('Default priority'),
       '#required' => TRUE,
       '#options' => array(
-        'hi' => t('High'),
-        'me' => t('Medium'),
-        'lo' => t('Low'),
+        UHOodiQueue::PRIORITY_HIGH => t('High'),
+        UHOodiQueue::PRIORITY_MEDIUM => t('Medium'),
+        UHOodiQueue::PRIORITY_LOW => t('Low'),
       ),
-      '#default_value' => variable_get('uh_oodi_queue_default_queue', 'me'),
+      '#default_value' => variable_get('uh_oodi_queue_default_queue', UHOodiQueue::PRIORITY_MEDIUM),
     ),
   );
   return system_settings_form($form);
