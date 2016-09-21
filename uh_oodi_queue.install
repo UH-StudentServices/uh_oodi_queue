@@ -1,0 +1,20 @@
+<?php
+/**
+ * @file
+ * Implementation for "University of Helsinki, Oodi Queue" module´s
+ * installation, uninstallation or update tasks.
+ *
+ * @license GPL, or GNU General Public License, version 3
+ * @license http://opensource.org/licenses/GPL-3.0
+ * @see README.md how to contribute to this project
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function uh_oodi_queue_uninstall() {
+  variable_del('uh_oodi_queue_name_hi');
+  variable_del('uh_oodi_queue_name_me');
+  variable_del('uh_oodi_queue_name_lo');
+  variable_del('uh_oodi_queue_default_queue');
+}

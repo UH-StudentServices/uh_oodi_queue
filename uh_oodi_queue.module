@@ -1,0 +1,37 @@
+<?php
+/**
+ * @file
+ * Implementation for "University of Helsinki, Oodi Queue" module.
+ *
+ * @license GPL, or GNU General Public License, version 3
+ * @license http://opensource.org/licenses/GPL-3.0
+ * @see README.md how to contribute to this project
+ */
+
+/**
+ * Implements hook_permission().
+ */
+function uh_oodi_queue_permission() {
+  return array(
+    'administer uh_oodi_queue' => array(
+      'title' => t('Administer UH, Oodi Queue'),
+      'restrict access' => TRUE,
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function uh_oodi_queue_menu() {
+  return array(
+    'admin/config/services/doo-oodi' => array(
+      'title' => t('UH Oodi Queue configuration'),
+      'description' => t('Configure your UH Oodi Queue.'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('uh_oodi_queue_settings'),
+      'access arguments' => array('administer uh_oodi_queue'),
+      'file' => 'includes/uh_oodi_queue.admin.inc',
+    ),
+  );
+}
