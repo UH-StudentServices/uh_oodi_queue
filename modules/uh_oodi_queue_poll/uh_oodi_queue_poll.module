@@ -204,6 +204,13 @@ function _uh_oodi_queue_poll_responses_valid($responses) {
   return TRUE;
 }
 
+/**
+ * Builds the items from given responses and processors. This is the heart of
+ * mapping to queue items.
+ * @param $responses
+ * @param $processors
+ * @return array
+ */
 function _uh_oodi_queue_poll_process_items($responses, $processors) {
   $items = array();
   foreach ($responses as $type => $response) {
