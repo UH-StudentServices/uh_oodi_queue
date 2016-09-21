@@ -69,3 +69,176 @@ function uh_oodi_queue_poll_validate_poll_margin($element) {
     form_set_error($element['#name'], t('Invalid modify string "@value"', array('@value' => $element['#value'])));
   }
 }
+
+/**
+ * Implements hook_cron().
+ */
+function uh_oodi_queue_poll_cron() {
+  if (!_uh_oodi_queue_poll_is_configured()) {
+    watchdog('uh_oodi_queue_poll', 'UH Oodi Queue Poll module is not configured but enabled.', array(), WATCHDOG_WARNING);
+    return;
+  }
+
+  // When was the last time when changes were polled?
+  $last_requested = variable_get('uh_oodi_queue_poll_last_requested', new DateTime('-1 month', new DateTimeZone('Etc/Zulu')));
+  $margin = variable_get('uh_oodi_queue_poll_margin', '');
+  if (!empty($margin) && $last_requested instanceof DateTime) {
+    $last_requested->modify($margin);
+  }
+
+  // Define next last requested timestamp
+  $next_last_requested = new DateTime('@' . REQUEST_TIME, new DateTimeZone('Etc/Zulu'));
+
+  // Define processing
+  $processors = array(
+    'learningopportunity' => array(
+      'url' => variable_get('uh_oodi_queue_poll_learningopportunity_changes_url', ''),
+      'mapping' => variable_get('uh_oodi_queue_poll_learningopportunity_mapping', array(
+        'action' => array('property' => 'deleted', 'preprocessors' => array('_uh_oodi_queue_poll_determine_action')),
+        'entityId' => 'learningopportunity_id',
+      )),
+    ),
+    'courseunitrealisation' => array(
+      'url' => variable_get('uh_oodi_queue_poll_courseunitrealisation_changes_url', ''),
+      'mapping' => variable_get('uh_oodi_queue_poll_courseunitrealisation_mapping', array(
+        'action' => array('property' => 'deleted', 'preprocessors' => array('_uh_oodi_queue_poll_determine_action')),
+        'entityId' => 'course_id',
+      )),
+    ),
+  );
+
+  // Parse changes and put them to queues
+  $http_options = variable_get('uh_oodi_queue_poll_http_options', array());
+  $responses = _uh_oodi_queue_poll_request($processors, $last_requested, $http_options);
+  if (_uh_oodi_queue_poll_responses_valid($responses)) {
+    $items = _uh_oodi_queue_poll_process_items($responses, $processors);
+    $queue = new UHOodiQueue();
+    foreach ($items as $item) {
+      try {
+        $queue->validateItem($item);
+        $queue->createItem($item);
+      } catch (\LogicException $e) {
+        watchdog('uh_oodi_queue_poll', 'Failed adding Oodi item to queue: "@message"', array('@message' => $e->getMessage()), WATCHDOG_ERROR);
+      }
+    }
+
+    // Save new last requested timestamp if processing was successful
+    variable_set('uh_oodi_queue_poll_last_requested', $next_last_requested);
+    // Leave log entry if debug enabled
+    if (variable_get('uh_oodi_queue_poll_debug', FALSE)) {
+      watchdog('uh_oodi_queue_poll', 'Processing was successfull, next request will be made "@datetime" (without margin calculation)', array('@datetime' => $next_last_requested->setTimezone(new DateTimeZone('Europe/Helsinki'))->format('d.m.Y H:i:s')), WATCHDOG_DEBUG);
+    }
+  }
+  elseif (variable_get('uh_oodi_queue_poll_debug', FALSE)) {
+    watchdog('uh_oodi_queue_poll', 'Processing failed. Last requested will remain at "@datetime" (without margin calculation)', array('@datetime' => $last_requested->setTimezone(new DateTimeZone('Europe/Helsinki'))->format('d.m.Y H:i:s')), WATCHDOG_DEBUG);
+  }
+}
+
+/**
+ * Deduces if this module is configured.
+ * @return bool
+ */
+function _uh_oodi_queue_poll_is_configured() {
+  return !empty(variable_get('uh_oodi_queue_poll_learningopportunity_changes_url', '')) || !empty(variable_get('uh_oodi_queue_poll_courseunitrealisation_changes_url', ''));
+}
+
+/**
+ * Requests all processors with given HTTP options.
+ *
+ * @param $processors
+ * @param DateTime $last_requested
+ * @param array $http_options
+ * @return array
+ */
+function _uh_oodi_queue_poll_request($processors, $last_requested, $http_options = array()) {
+  $responses = array();
+  foreach ($processors as $type => $processor) {
+    $url = str_replace(':since_date', $last_requested->format('Y-m-d\TH:i:s\.000\Z'), $processor['url']);
+    $responses[$type] = drupal_http_request($url, $http_options);
+  }
+  return $responses;
+}
+
+/**
+ * Validates responses. Returns FALSE if any of the requests fails somehow.
+ * @param $responses
+ * @return bool
+ */
+function _uh_oodi_queue_poll_responses_valid($responses) {
+  foreach ($responses as $type => $response) {
+
+    // Validate that HTTP response status is 200
+    if ($response->code != 200) {
+      if (variable_get('uh_oodi_queue_poll_debug', FALSE)) {
+        watchdog('uh_oodi_queue_poll', '@type responded with HTTP status "@status"', array('@type' => $type, '@status' => $response->status), WATCHDOG_DEBUG);
+      }
+      return FALSE;
+    }
+
+    // Validate that response can be parsed as JSON
+    $json_data = drupal_json_decode($response->data);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+      if (variable_get('uh_oodi_queue_poll_debug', FALSE)) {
+        watchdog('uh_oodi_queue_poll', '@type could not parse as JSON', array('@type' => $type), WATCHDOG_DEBUG);
+      }
+      return FALSE;
+    }
+
+    // Validate that JSON object has data property
+    if (!isset($json_data['data'])) {
+      if (variable_get('uh_oodi_queue_poll_debug', FALSE)) {
+        watchdog('uh_oodi_queue_poll', '@type did not have data property', array('@type' => $type), WATCHDOG_DEBUG);
+      }
+      return FALSE;
+    }
+
+    // Validate that json´s data property is an array
+    if (!is_array($json_data['data'])) {
+      if (variable_get('uh_oodi_queue_poll_debug', FALSE)) {
+        watchdog('uh_oodi_queue_poll', '@type data property was not an array', array('@type' => $type), WATCHDOG_DEBUG);
+      }
+      return FALSE;
+    }
+
+  }
+  return TRUE;
+}
+
+function _uh_oodi_queue_poll_process_items($responses, $processors) {
+  $items = array();
+  foreach ($responses as $type => $response) {
+    $json_data = drupal_json_decode($response->data);
+    foreach ($json_data['data'] as $source_item) {
+      $mapping = $processors[$type]['mapping'];
+      $item = array('entityType' => $type);
+      foreach ($mapping as $target => $source) {
+        if (is_string($source)) {
+          $item[$target] = $source_item[$source];
+        }
+        if (is_array($source) && !empty($source['property'])) {
+          $value = $source_item[$source['property']];
+          if (!empty($source['preprocessors'])) {
+            foreach ($source['preprocessors'] as $callback) {
+              if (function_exists($callback)) {
+                $value = $callback($value);
+              }
+            }
+          }
+          $item[$target] = $value;
+        }
+      }
+      $items[] = $item;
+    }
+  }
+  return $items;
+}
+
+/**
+ * Preprocess callback for determining which action is performed based on
+ * deleted property.
+ * @param $deleted
+ * @return string
+ */
+function _uh_oodi_queue_poll_determine_action($deleted) {
+  return $deleted == 'true' ? 'delete' : 'update';
+}

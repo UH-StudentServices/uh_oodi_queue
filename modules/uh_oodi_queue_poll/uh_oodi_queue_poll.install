@@ -16,4 +16,9 @@ function uh_oodi_queue_poll_uninstall() {
   variable_del('uh_oodi_queue_poll_learningopportunity_changes_url');
   variable_del('uh_oodi_queue_poll_courseunitrealisation_changes_url');
   variable_del('uh_oodi_queue_poll_margin');
+  variable_del('uh_oodi_queue_poll_last_requested');
+  variable_del('uh_oodi_queue_poll_learningopportunity_mapping');
+  variable_del('uh_oodi_queue_poll_courseunitrealisation_mapping');
+  variable_del('uh_oodi_queue_poll_http_options');
+  variable_del('uh_oodi_queue_poll_debug');
 }
