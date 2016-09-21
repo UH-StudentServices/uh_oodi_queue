@@ -14,9 +14,6 @@
  */
 function uh_oodi_queue_settings() {
   $form = array();
-  $uh_oodi_queue_name_hi = variable_get('uh_oodi_queue_name_hi', 'uh_oodi_queue_hi');
-  $uh_oodi_queue_name_me = variable_get('uh_oodi_queue_name_me', 'uh_oodi_queue_me');
-  $uh_oodi_queue_name_lo = variable_get('uh_oodi_queue_name_lo', 'uh_oodi_queue_lo');
   $form['queues'] = array(
     '#type' => 'fieldset',
     '#title' => t('Queues'),
@@ -25,22 +22,22 @@ function uh_oodi_queue_settings() {
       '#type' => 'textfield',
       '#title' => t('High priority queue name'),
       '#required' => TRUE,
-      '#default_value' => $uh_oodi_queue_name_hi,
-      '#disabled' => _uh_oodi_queue_has_items($uh_oodi_queue_name_hi),
+      '#default_value' => variable_get('uh_oodi_queue_name_hi', 'uh_oodi_queue_hi'),
+      '#disabled' => _uh_oodi_queue_has_items(UHOodiQueue::PRIORITY_HIGH),
     ),
     'uh_oodi_queue_name_me' => array(
       '#type' => 'textfield',
       '#title' => t('Medium priority queue name'),
       '#required' => TRUE,
-      '#default_value' => $uh_oodi_queue_name_me,
-      '#disabled' => _uh_oodi_queue_has_items($uh_oodi_queue_name_me),
+      '#default_value' => variable_get('uh_oodi_queue_name_me', 'uh_oodi_queue_me'),
+      '#disabled' => _uh_oodi_queue_has_items(UHOodiQueue::PRIORITY_MEDIUM),
     ),
     'uh_oodi_queue_name_lo' => array(
       '#type' => 'textfield',
       '#title' => t('Low priority queue name'),
       '#required' => TRUE,
-      '#default_value' => $uh_oodi_queue_name_lo,
-      '#disabled' => _uh_oodi_queue_has_items($uh_oodi_queue_name_lo),
+      '#default_value' => variable_get('uh_oodi_queue_name_lo', 'uh_oodi_queue_lo'),
+      '#disabled' => _uh_oodi_queue_has_items(UHOodiQueue::PRIORITY_LOW),
     ),
     'uh_oodi_queue_default_queue' => array(
       '#type' => 'select',
@@ -58,15 +55,12 @@ function uh_oodi_queue_settings() {
 }
 
 /**
- * @param string $queue_name
+ * @param $priority
  * @return null|bool
  */
-function _uh_oodi_queue_has_items($queue_name) {
-  if (!is_string($queue_name)) {
-    return NULL;
-  }
-  /** @var DrupalReliableQueueInterface $queue */
-  $queue = DrupalQueue::get($queue_name, TRUE);
+function _uh_oodi_queue_has_items($priority) {
+  /** @var UHOodiQueue $queue */
+  $queue = new UHOodiQueue($priority);
   $item = $queue->claimItem();
   if ($item === FALSE) {
     return FALSE;
