@@ -23,7 +23,7 @@ if ($item !== FALSE) {
 
 ```bash
 
-# Adds an item to high priority
+# Adds an item to high priority queue
 [you@machine]$ drush uoq-add update courseunitrealisation 12345 --priority=hi
  
 ```
