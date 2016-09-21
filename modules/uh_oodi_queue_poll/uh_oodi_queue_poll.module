@@ -1,0 +1,71 @@
+<?php
+/**
+ * @file
+ * Implementation for "University of Helsinki, Oodi Queue Poll" module.
+ *
+ * @license GPL, or GNU General Public License, version 3
+ * @license http://opensource.org/licenses/GPL-3.0
+ * @see README.md how to contribute to this project
+ */
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function uh_oodi_queue_poll_form_uh_oodi_queue_settings_alter(&$form, &$form_state) {
+  $description = t('Endpoint where the changes can be fetched as JSON. <em>:since_date</em> will be constructed by poll mdoule automatically.');
+  $form['poll'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Poll'),
+    '#description' => t('Queues gets synchonised by polling strategy. This configuration sets the source URLs.'),
+  );
+  $form['poll']['uh_oodi_queue_poll_learningopportunity_changes_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Learningopportunity changes URL'),
+    '#description' => $description,
+    '#required' => TRUE,
+    '#default_value' => variable_get('uh_oodi_queue_poll_learningopportunity_changes_url', ''),
+    '#element_validate' => array('uh_oodi_queue_poll_validate_url'),
+  );
+  $form['poll']['uh_oodi_queue_poll_courseunitrealisation_changes_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Courseunitrealisation changes URL'),
+    '#description' => $description,
+    '#required' => TRUE,
+    '#default_value' => variable_get('uh_oodi_queue_poll_courseunitrealisation_changes_url', ''),
+    '#element_validate' => array('uh_oodi_queue_poll_validate_url'),
+  );
+  $form['poll']['uh_oodi_queue_poll_margin'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Poll margin'),
+    '#description' => t('Polls keeps track of last requested timestamp. You may modify this timestamp before next poll run with this setting. Example: "-5 seconds".'),
+    '#default_value' => variable_get('uh_oodi_queue_poll_margin', ''),
+    '#element_validate' => array('uh_oodi_queue_poll_validate_poll_margin'),
+  );
+}
+
+/**
+ * Validates element value that it's a valid absolute URL address.
+ * @param $element
+ */
+function uh_oodi_queue_poll_validate_url($element) {
+  if (valid_url($element['#value'], TRUE) !== TRUE) {
+    form_set_error($element['#name'], t('Invalid URL format "@url"', array('@url' => $element['#value'])));
+  }
+}
+
+/**
+ * Validates element value that it is a valid time modifier string.
+ * @param $element
+ */
+function uh_oodi_queue_poll_validate_poll_margin($element) {
+  // Allow empty value
+  if (drupal_strlen($element['#value']) == 0) {
+    return;
+  }
+
+  // Actual validate
+  $date = new DateTime();
+  if (@$date->modify($element['#value']) === FALSE) {
+    form_set_error($element['#name'], t('Invalid modify string "@value"', array('@value' => $element['#value'])));
+  }
+}

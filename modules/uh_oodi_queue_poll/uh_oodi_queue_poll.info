@@ -1,0 +1,6 @@
+name = University of Helsinki, Oodi Queue Poll
+description = Syncrhonises queues by polling doo-oodi service during Drupal crons.
+core = 7.x
+package = University of Helsinki
+configure = admin/config/services/doo-oodi/poll
+dependencies[] = uh_oodi_queue

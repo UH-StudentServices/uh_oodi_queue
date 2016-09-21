@@ -1,0 +1,19 @@
+<?php
+/**
+ * @file
+ * Implementation for "University of Helsinki, Oodi Queue Poll" module´s
+ * installation, uninstallation or update tasks.
+ *
+ * @license GPL, or GNU General Public License, version 3
+ * @license http://opensource.org/licenses/GPL-3.0
+ * @see README.md how to contribute to this project
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function uh_oodi_queue_poll_uninstall() {
+  variable_del('uh_oodi_queue_poll_learningopportunity_changes_url');
+  variable_del('uh_oodi_queue_poll_courseunitrealisation_changes_url');
+  variable_del('uh_oodi_queue_poll_margin');
+}
