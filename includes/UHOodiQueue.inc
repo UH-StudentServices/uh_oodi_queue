@@ -22,8 +22,8 @@ class UHOodiQueue extends SystemQueue implements DrupalReliableQueueInterface {
   public function __construct($priority = self::PRIORITY_MEDIUM) {
     // Validate priority
     if ($priority !== self::PRIORITY_HIGH &&
-      $priority !== self::PRIORITY_HIGH &&
-      $priority !== self::PRIORITY_HIGH) {
+      $priority !== self::PRIORITY_MEDIUM &&
+      $priority !== self::PRIORITY_LOW) {
       throw new InvalidArgumentException('Invalid priority given');
     }
 
