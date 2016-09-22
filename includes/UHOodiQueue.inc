@@ -29,11 +29,26 @@ class UHOodiQueue extends SystemQueue implements DrupalReliableQueueInterface {
       $priority !== self::PRIORITY_LOW) {
       throw new InvalidArgumentException('Invalid priority given');
     }
+    $this->setPriority($priority);
 
     // Based on priority, we can deduce the queue name
-    $name = variable_get('uh_oodi_queue_name_' . $priority, 'uh_oodi_queue_' . $priority);
+    $name = variable_get('uh_oodi_queue_name_' . $this->getPriority(), 'uh_oodi_queue_' . $this->getPriority());
 
     return parent::__construct($name);
+  }
+
+  /**
+   * @param $priority
+   */
+  protected function setPriority($priority) {
+    $this->priority = $priority;
+  }
+
+  /**
+   * @return string
+   */
+  public function getPriority() {
+    return $this->priority;
   }
 
   /**
