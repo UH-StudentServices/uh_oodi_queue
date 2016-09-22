@@ -27,6 +27,38 @@ if ($item !== FALSE) {
   $hi_queue->createItem($item);
 }
 
+// Creates low priority item, then high priority item, then prints their IDs
+// in right priority order.
+$priority_queue = new UHOodiPrioritisedQueue();
+$priority_queue->createItem(array('action' => 'update', 'entityType' => 'learningopportunity', 'entityId' => 123), UHOodiQueue::PRIORITY_LOW);
+$priority_queue->createItem(array('action' => 'update', 'entityType' => 'learningopportunity', 'entityId' => 321), UHOodiQueue::PRIORITY_HIGH);
+while ($item = $priority_queue->claimItem()) {
+
+  // Prints:
+  //   321
+  //   123
+  print $item->getId();
+
+  // Deletes item from queue if priority is low, or else it releases the item
+  if ($item->getPriority() == UHOodiQueue::PRIORITY_LOW) {
+    $priority_queue->deleteItem($item);
+  }
+  else {
+    $priority_queue->releaseItem($item);
+  }
+
+  // Print "opportunity" if type matches with "learningopportunity"
+  if ($item->isType('learningopportunity')) {
+    print "opportunity";
+  }
+
+  // Print "opportunity deleted" if action "delete" matches
+  if ($item->isAction('delete')) {
+    print "opportunity deleted";
+  }
+
+}
+
 
 ```
 
