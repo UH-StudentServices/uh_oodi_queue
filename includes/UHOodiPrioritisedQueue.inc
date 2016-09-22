@@ -78,9 +78,13 @@ class UHOodiPrioritisedQueue implements DrupalQueueInterface {
   }
 
   /**
-   * @param UHOodiQueueItem $item
+   * @param $item
+   * @param $priority
    */
-  public function deleteItem(UHOodiQueueItem $item) {
+  public function deleteItem($item, $priority = UHOodiQueue::PRIORITY_MEDIUM) {
+    if (!$item instanceof UHOodiQueueItem) {
+      $item = new UHOodiQueueItem($item, $priority);
+    }
     switch ($item->getPriority()) {
       case UHOodiQueue::PRIORITY_HIGH:
         $this->high_queue->deleteItem($item->exportToQueueItem());
@@ -96,9 +100,13 @@ class UHOodiPrioritisedQueue implements DrupalQueueInterface {
 
   /**
    * @param UHOodiQueueItem $item
+   * @param $priority
    * @return bool|DatabaseStatementInterface
    */
-  public function releaseItem(UHOodiQueueItem $item) {
+  public function releaseItem($item, $priority = UHOodiQueue::PRIORITY_MEDIUM) {
+    if (!$item instanceof UHOodiQueueItem) {
+      $item = new UHOodiQueueItem($item, $priority);
+    }
     switch ($item->getPriority()) {
       case UHOodiQueue::PRIORITY_HIGH:
         return $this->high_queue->releaseItem($item->exportToQueueItem());
