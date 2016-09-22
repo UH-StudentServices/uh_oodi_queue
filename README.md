@@ -39,12 +39,9 @@ while ($item = $priority_queue->claimItem()) {
   //   123
   print $item->getId();
 
-  // Deletes item from queue if priority is low, or else it releases the item
+  // Deletes item from queue if priority is low
   if ($item->getPriority() == UHOodiQueue::PRIORITY_LOW) {
     $priority_queue->deleteItem($item);
-  }
-  else {
-    $priority_queue->releaseItem($item);
   }
 
   // Print "opportunity" if type matches with "learningopportunity"
