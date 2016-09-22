@@ -3,4 +3,6 @@ description = Maintains Drupal queue that contains content actions made in Oodi.
 core = 7.x
 package = University of Helsinki
 configure = admin/config/services/doo-oodi
+files[] = includes/UHOodiPrioritisedQueue.inc
 files[] = includes/UHOodiQueue.inc
+files[] = includes/UHOodiQueueItem.inc
