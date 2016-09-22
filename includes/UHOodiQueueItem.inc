@@ -27,28 +27,29 @@ class UHOodiQueueItem {
    * @return mixed
    */
   public function getAction() {
-    return $this->getData()->action;
+    return $this->getData('action');
   }
 
   /**
    * @return mixed
    */
   public function getType() {
-    return $this->getData()->entityType;
+    return $this->getData('entityType');
   }
 
   /**
    * @return mixed
    */
   public function getId() {
-    return $this->getData()->entityId;
+    return $this->getData('entityId');
   }
 
   /**
+   * @param $property
    * @return mixed
    */
-  public function getData() {
-    return $this->item->data;
+  public function getData($property = NULL) {
+    return is_null($property) ? $this->item->data : $this->item->data[$property];
   }
 
   /**
